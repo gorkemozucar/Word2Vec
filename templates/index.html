@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelime Benzerliği</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 800px;
+            margin-top: 2rem;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .loading {
+            display: none;
+        }
+        .result-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .similarity-badge {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title text-center mb-4">Kelime Benzerliği</h1>
+                <div class="input-group mb-3">
+                    <input type="text" id="wordInput" class="form-control" placeholder="Bir kelime girin..." aria-label="Kelime">
+                    <button class="btn btn-primary" type="button" id="searchButton">Ara</button>
+                </div>
+                
+                <div class="loading text-center my-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                </div>
+
+                <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+                
+                <div id="results" class="mt-4" style="display: none;">
+                    <h5 class="mb-3">Benzer Kelimeler:</h5>
+                    <div id="similarWordsList" class="list-group"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('searchButton').addEventListener('click', searchWord);
+        document.getElementById('wordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchWord();
+            }
+        });
+
+        function searchWord() {
+            const word = document.getElementById('wordInput').value.trim();
+            if (!word) return;
+
+            // Reset UI
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+            document.querySelector('.loading').style.display = 'block';
+
+            fetch('/find_similar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ word: word })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('.loading').style.display = 'none';
+                
+                if (data.error) {
+                    document.getElementById('errorMessage').textContent = data.error;
+                    document.getElementById('errorMessage').style.display = 'block';
+                    return;
+                }
+
+                const resultsList = document.getElementById('similarWordsList');
+                resultsList.innerHTML = '';
+                
+                data.similar_words.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'list-group-item result-item d-flex justify-content-between align-items-center';
+                    div.innerHTML = `
+                        <span>${index + 1}. ${item.word}</span>
+                        <span class="badge similarity-badge">${(item.similarity * 100).toFixed(2)}%</span>
+                    `;
+                    resultsList.appendChild(div);
+                });
+
+                document.getElementById('results').style.display = 'block';
+            })
+            .catch(error => {
+                document.querySelector('.loading').style.display = 'none';
+                document.getElementById('errorMessage').textContent = 'Bir hata oluştu. Lütfen tekrar deneyin.';
+                document.getElementById('errorMessage').style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html> 
