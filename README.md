@@ -6,8 +6,8 @@ Bu uygulama, Türkçe kelimelerin benzerliklerini bulmak için FastText modelini
 
 1. Projeyi klonlayın:
 ```bash
-git clone https://github.com/[kullanıcı-adınız]/kelime-benzerligi.git
-cd kelime-benzerligi
+git clone https://github.com/gorkemozucar/Word2Vec.git
+cd Word2Vec
 ```
 
 2. Gerekli paketleri yükleyin:
